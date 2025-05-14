@@ -1,9 +1,9 @@
 import unittest
 import time
-import requests
+import os
 import redis
 import hvac
-import os
+
 
 class TestRedisVaultIntegration(unittest.TestCase):
     @classmethod
@@ -71,6 +71,7 @@ class TestRedisVaultIntegration(unittest.TestCase):
             decode_responses=True
         )
         self.assertTrue(test_client.ping())
+
 
 if __name__ == '__main__':
     unittest.main()
