@@ -9,65 +9,36 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false
 
-    - name: Login to DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Generate changelog
+        id: changelog
+        uses: TriPSs/conventional-changelog-action@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version-file: './package.json'
+          output-file: 'CHANGELOG.md'
+          skip-version-file: true
+          skip-commit: true
+          release-count: 0
 
-    - name: Build and push Redis image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        file: examples/kubernetes-setup/redis/Dockerfile
-        push: true
-        tags: |
-          alipnhin/redis-vault-infra-redis:latest
-          alipnhin/redis-vault-infra-redis:${{ github.ref_name }}
-
-    - name: Build and push Vault image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        file: examples/kubernetes-setup/vault/Dockerfile
-        push: true
-        tags: |
-          alipnhin/redis-vault-infra-vault:latest
-          alipnhin/redis-vault-infra-vault:${{ github.ref_name }}
-
-    - name: Generate changelog
-      id: changelog
-      uses: TriPSs/conventional-changelog-action@v3
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        version-file: './package.json'
-        output-file: 'CHANGELOG.md'
-        skip-version-file: true
-        skip-commit: true
-        release-count: 0
-
-    - name: Create Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref_name }}
-        release_name: Release ${{ github.ref_name }}
-        body: ${{ steps.changelog.outputs.clean_changelog }}
-        draft: false
-        prerelease: false
-
-    - name: Update documentation
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add CHANGELOG.md
-        git commit -m "docs: update changelog for ${{ github.ref_name }}"
-        git push 
+      - name: Update documentation
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add CHANGELOG.md
+          git commit -m "docs: update changelog for ${{ github.ref_name }}"
+          git push 
