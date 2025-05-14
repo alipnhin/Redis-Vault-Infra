@@ -9,8 +9,8 @@ class TestRedisVaultIntegration(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up test environment"""
-        cls.redis_password = "YourStrongPassword"
-        cls.vault_token = "root"
+        cls.redis_password = os.getenv('REDIS_PASSWORD', 'YourStrongPassword')
+        cls.vault_token = os.getenv('VAULT_DEV_ROOT_TOKEN_ID', 'root')
         
         # Wait for services to start
         time.sleep(5)
@@ -37,17 +37,18 @@ class TestRedisVaultIntegration(unittest.TestCase):
         self.assertEqual(self.redis_client.get('test_key'), 'test_value')
 
     def test_vault_connection(self):
-        """Test Vault connection and basic operations"""
+    """Test Vault connection and basic operations"""
         # Test connection
         self.assertTrue(self.vault_client.is_authenticated())
         
-        # Test secrets engine
-        self.vault_client.sys.enable_secrets_engine('kv', path='secret')
+        # Test secrets engine with a unique path
+        unique_path = 'integration_test_secret'
+        self.vault_client.sys.enable_secrets_engine('kv', path=unique_path)
         self.vault_client.secrets.kv.v2.create_or_update_secret(
-            path='test',
+            path=f'{unique_path}/test',
             secret=dict(test_key='test_value')
         )
-        secret = self.vault_client.secrets.kv.v2.read_secret_version(path='test')
+        secret = self.vault_client.secrets.kv.v2.read_secret_version(path=f'{unique_path}/test')
         self.assertEqual(secret['data']['data']['test_key'], 'test_value')
 
     def test_redis_vault_integration(self):
