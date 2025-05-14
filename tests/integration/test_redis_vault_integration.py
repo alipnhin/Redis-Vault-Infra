@@ -37,7 +37,7 @@ class TestRedisVaultIntegration(unittest.TestCase):
         self.assertEqual(self.redis_client.get('test_key'), 'test_value')
 
     def test_vault_connection(self):
-    """Test Vault connection and basic operations"""
+        """Test Vault connection and basic operations"""
         # Test connection
         self.assertTrue(self.vault_client.is_authenticated())
         
@@ -73,4 +73,4 @@ class TestRedisVaultIntegration(unittest.TestCase):
         self.assertTrue(test_client.ping())
 
 if __name__ == '__main__':
-    unittest.main() 
+    unittest.main()
