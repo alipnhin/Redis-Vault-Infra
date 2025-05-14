@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    - name: Run shellcheck
+      uses: reviewdog/action-shellcheck@v1
+      with:
+        shellcheck_flags: '-x'
+        reporter: 'github-pr-review'
+
+    - name: Test Redis configuration
+      run: |
+        docker run --rm redis:7.2.4 redis-cli --version
+        docker run --rm redis:7.2.4 redis-server --test-memory 1024
+
+    - name: Test Vault configuration
+      run: |
+        docker run --rm hashicorp/vault:1.15.2 vault --version
+        docker run --rm hashicorp/vault:1.15.2 vault server -config=/dev/null -dev
+
+    - name: Test Kubernetes manifests
+      uses: stefanprodan/kube-tools@v1
+      with:
+        kubectl: 'v1.25.0'
+        kustomize: 'v4.5.7'
+      run: |
+        kubectl apply --dry-run=client -f examples/kubernetes-setup/redis/redis-master.yaml
+        kubectl apply --dry-run=client -f examples/kubernetes-setup/redis/redis-replica.yaml
+        kubectl apply --dry-run=client -f examples/kubernetes-setup/vault/vault-config.yaml
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'redis:7.2.4'
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'hashicorp/vault:1.15.2'
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Run YAML lint
+      uses: ibiqlik/action-yamllint@v3
+      with:
+        config_file: .yamllint
+        file_or_dir: 'examples/kubernetes-setup'
+
+    - name: Run Markdown lint
+      uses: DavidAnson/markdownlint-action@v1
+      with:
+        config: .markdownlint.json
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [test, security, lint]
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push Redis image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: examples/kubernetes-setup/redis/Dockerfile
+        push: true
+        tags: |
+          alipnhin/redis-vault-infra-redis:latest
+          alipnhin/redis-vault-infra-redis:${{ github.sha }}
+
+    - name: Build and push Vault image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: examples/kubernetes-setup/vault/Dockerfile
+        push: true
+        tags: |
+          alipnhin/redis-vault-infra-vault:latest
+          alipnhin/redis-vault-infra-vault:${{ github.sha }} 

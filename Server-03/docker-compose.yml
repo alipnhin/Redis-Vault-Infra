@@ -1,0 +1,112 @@
+version: "3.8"
+
+services:
+  # Vault Server (Follower)
+  vault:
+    image: hashicorp/vault:1.15.2
+    container_name: vault-server3
+    restart: unless-stopped
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault_data:/vault/data
+      - vault_config:/vault/config
+      - vault_logs:/vault/logs
+      - ./vault/certs:/vault/certs
+      - ./vault/config:/vault/config
+      - ./vault/snapshots:/vault/snapshots
+    ports:
+      - "8200:8200"
+      - "8201:8201"
+    environment:
+      - VAULT_ADDR=https://0.0.0.0:8200
+      - VAULT_API_ADDR=https://redis-03.etadbir.com:8200
+      - VAULT_CLUSTER_ADDR=https://redis-03.etadbir.com:8201
+      - HOSTNAME=redis-03.etadbir.com
+    command: server -config=/vault/config/vault.hcl
+    networks:
+      - vault_network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--spider",
+          "--quiet",
+          "https://localhost:8200/v1/sys/health",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Redis Master (Node 3)
+  redis-master:
+    image: redis:7.2
+    container_name: redis-master3
+    restart: unless-stopped
+    volumes:
+      - ./redis/master-config/redis.conf:/usr/local/etc/redis/redis.conf
+      - redis_master_data:/data
+    ports:
+      - "6379:6379"
+      - "16379:16379"
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - redis_network
+    sysctls:
+      net.core.somaxconn: "511"
+      vm.overcommit_memory: "1"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "YourStrongPassword", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Redis Replica (from Master 1 on Server 1)
+  redis-replica:
+    image: redis:7.2
+    container_name: redis-replica3
+    restart: unless-stopped
+    volumes:
+      - ./redis/replica-config/redis.conf:/usr/local/etc/redis/redis.conf
+      - redis_replica_data:/data
+    ports:
+      - "6380:6379"
+      - "16380:16379"
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - redis_network
+    sysctls:
+      net.core.somaxconn: "511"
+      vm.overcommit_memory: "1"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "YourStrongPassword", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - redis-master
+
+networks:
+  vault_network:
+    driver: bridge
+  redis_network:
+    driver: bridge
+
+volumes:
+  vault_data:
+  vault_config:
+  vault_logs:
+  redis_master_data:
+  redis_replica_data:
