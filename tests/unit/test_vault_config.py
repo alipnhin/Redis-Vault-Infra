@@ -29,7 +29,8 @@ class TestVaultConfig(unittest.TestCase):
     def test_vault_security_context(self):
         """Test Vault security context"""
         security_context = self.config['spec']['template']['spec']['securityContext']
-        self.assertFalse(security_context.get('runAsRoot', True))
+        self.assertTrue(security_context.get('runAsNonRoot', False))
+        self.assertEqual(security_context.get('runAsUser'), 1000)
 
     def test_vault_environment(self):
         """Test Vault environment variables"""

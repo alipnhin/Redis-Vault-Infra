@@ -26,6 +26,7 @@ jobs:
           - 8200:8200
         env:
           VAULT_DEV_ROOT_TOKEN_ID: root
+          VAULT_ADDR: https://127.0.0.1:8200
         options: >-
           --cap-add=IPC_LOCK
           --health-cmd "vault status"
