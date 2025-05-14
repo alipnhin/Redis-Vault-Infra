@@ -17,6 +17,7 @@ jobs:
         env:
           REDIS_PASSWORD: YourStrongPassword
         options: >-
+          --requirepass YourStrongPassword
           --health-cmd "redis-cli -a YourStrongPassword ping"
           --health-interval 10s
           --health-timeout 5s
