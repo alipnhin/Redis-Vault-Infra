@@ -5,58 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2024-03-19
+## [1.0.0] - 2025-05-14
 
 ### Added
-- Initial release
-- Basic Redis master-replica setup
-- Vault HA cluster with Raft storage
-- TLS encryption for Redis and Vault
-- Monitoring with Prometheus and Grafana
-- Backup and restore scripts
-- Kubernetes deployment examples
-- Comprehensive documentation
-- GitHub Actions workflows
-- Security best practices
-- Contributing guidelines
+- Initial release of Redis-Vault-Infra
+- Redis master-replica setup with Sentinel for high availability
+- Vault HA cluster with Raft storage backend
+- TLS encryption for secure communication
+- Comprehensive monitoring setup with Prometheus and Grafana
+- Backup and restore functionality
+- Kubernetes deployment support
+- Detailed documentation including:
+  - Architecture overview
+  - Security guidelines
+  - Installation guide
+  - Kubernetes deployment guide
+  - Troubleshooting guide
+- Comprehensive test suite (unit, integration, performance) for Redis and Vault configuration and integration
 
 ### Security
 - TLS encryption for all services
-- Password authentication for Redis
-- Token-based authentication for Vault
-- Network policies for Kubernetes
-- RBAC configurations
+- Secure password management
+- Role-based access control
 - Audit logging
-- Certificate management
-
-### Documentation
-- Architecture documentation
-- Security guide
-- Kubernetes setup guide
-- GitHub repository setup guide
-- Contributing guidelines
-- Code of conduct
-- License (MIT)
+- Automatic unsealing for Vault
 
 ### Infrastructure
-- Docker Compose setup
+- Docker and Docker Compose support
 - Kubernetes manifests
-- Monitoring stack
-- Backup scripts
-- Helper scripts
-- CI/CD pipelines
+- Monitoring stack:
+  - Prometheus for metrics collection
+  - Grafana for visualization
+  - AlertManager for notifications
+- Backup solutions for both Redis and Vault
 
-### Development
-- GitHub Actions workflows
-- Code linting
-- Security scanning
-- Automated testing
-- Release automation
-- Changelog generation
-
-## [Unreleased]
-### Added
-- Comprehensive test suite (unit, integration, performance) for Redis and Vault configuration and integration.
+### Documentation
+- Comprehensive README with setup instructions
+- Architecture documentation
+- Security best practices
+- Contributing guidelines
+- License information
+- Troubleshooting guide
 
 ### Improved
-- Kubernetes YAMLs now enforce pod-level securityContext (`runAsNonRoot`, `runAsRoot`) for enhanced security. 
+- Kubernetes YAMLs now enforce pod-level securityContext (`runAsNonRoot`, `runAsRoot`) for enhanced security
+
+[1.0.0]: https://github.com/alipnhin/Redis-Vault-Infra/releases/tag/v1.0.0 
