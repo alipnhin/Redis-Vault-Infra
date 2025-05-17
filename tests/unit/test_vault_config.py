@@ -36,7 +36,7 @@ class TestVaultConfig(unittest.TestCase):
         """Test Vault environment variables"""
         env = self.config['spec']['template']['spec']['containers'][0]['env']
         env_dict = {e['name']: e['value'] for e in env}
-        # در محیط CI از http استفاده می‌کنیم
+        # In CI environment, we use http
         self.assertIn(env_dict.get('VAULT_ADDR'), ['https://127.0.0.1:8200', 'http://127.0.0.1:8200'])
 
 if __name__ == '__main__':

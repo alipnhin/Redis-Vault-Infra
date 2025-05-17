@@ -1,43 +1,52 @@
 #!/bin/bash
-# دستورات نصب Docker و Docker Compose روی Ubuntu 24.04 LTS
+# Commands for installing Docker and Docker Compose on Ubuntu 24.04 LTS
 
-# تنظیم رنگ‌ها برای خروجی
+# Set colors for output
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}=== شروع نصب Docker و Docker Compose ===${NC}"
+echo -e "${GREEN}=== Starting Docker and Docker Compose Installation ===${NC}"
 
-# به‌روزرسانی لیست پکیج‌ها
-echo -e "${YELLOW}در حال به‌روزرسانی لیست پکیج‌ها...${NC}"
-sudo apt update
+# Update package list
+echo -e "${YELLOW}Updating package list...${NC}"
+sudo apt-get update
 
-# نصب پیش‌نیازهای مورد نیاز
-echo -e "${YELLOW}در حال نصب پیش‌نیازها...${NC}"
-sudo apt install -y apt-transport-https ca-certificates curl software-properties-common gnupg lsb-release
+# Install required prerequisites
+sudo apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
 
-# اضافه کردن کلید GPG رسمی Docker
-echo -e "${YELLOW}در حال اضافه کردن کلید GPG Docker...${NC}"
+# Add Docker's official GPG key
+echo -e "${YELLOW}Adding Docker's official GPG key...${NC}"
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 
-# اضافه کردن مخزن Docker به لیست مخازن
-echo -e "${YELLOW}در حال اضافه کردن مخزن Docker...${NC}"
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+# Set up the stable repository
+echo -e "${YELLOW}Setting up Docker repository...${NC}"
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-# به‌روزرسانی لیست پکیج‌ها با مخزن جدید
-echo -e "${YELLOW}در حال به‌روزرسانی مجدد مخازن...${NC}"
-sudo apt update
+# Install Docker Engine
+echo -e "${YELLOW}Installing Docker Engine...${NC}"
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
-# نصب Docker Engine
-echo -e "${YELLOW}در حال نصب Docker Engine...${NC}"
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+# Install Docker Compose
+echo -e "${YELLOW}Installing Docker Compose...${NC}"
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
 
-# اضافه کردن کاربر فعلی به گروه docker
-echo -e "${YELLOW}در حال اضافه کردن کاربر فعلی به گروه docker...${NC}"
+# Add current user to docker group
+echo -e "${YELLOW}Adding current user to docker group...${NC}"
 sudo usermod -aG docker $USER
-echo -e "${GREEN}کاربر فعلی به گروه docker اضافه شد. لطفاً برای اعمال تغییرات، خارج شوید و دوباره وارد شوید یا دستور زیر را اجرا کنید:${NC}"
-echo -e "${YELLOW}newgrp docker${NC}"
+
+echo -e "${GREEN}=== Docker and Docker Compose Installation Completed ===${NC}"
+echo -e "${YELLOW}Please log out and log back in for the group changes to take effect.${NC}"
 
 # فعال کردن سرویس Docker برای راه‌اندازی در استارت سیستم
 echo -e "${YELLOW}در حال فعال‌سازی سرویس Docker...${NC}"
